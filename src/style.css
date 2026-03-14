@@ -77,8 +77,8 @@ button:hover {
 
 @media (max-width: 768px) {
   .controls {
-    top: auto;
-    bottom: 20px;
+    top: 90%;
+    bottom: 50px;
     left: 50%;
     right: auto;
     transform: translateX(-50%);
