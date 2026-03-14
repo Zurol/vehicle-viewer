@@ -1,5 +1,5 @@
-import { defineConfig } from 'vite'
+import { defineConfig } from "vite";
 
 export default defineConfig({
-    base: '/vehicle-viewer/'
-})
+  base: process.env.VITE_BASE || "/",
+});
