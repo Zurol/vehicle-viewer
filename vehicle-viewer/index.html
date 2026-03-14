@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vehicle Viewer</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+
+  <body>
+    <div id="app">
+      <div id="loading">
+        <div id="loading-bar-container">
+          <div id="loading-bar"></div>
+        </div>
+      </div>
+      <canvas id="scene"></canvas>
+      <div id="title">Vehicle Viewer</div>
+      <div class="controls">
+        <button data-view="top">Top</button>
+        <button data-view="front">Front</button>
+        <button data-view="left">Left</button>
+        <button data-view="back">Back</button>
+        <button data-view="right">Right</button>
+      </div>
+    </div>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
