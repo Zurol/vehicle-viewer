@@ -16,17 +16,17 @@ const scene = new THREE.Scene();
 /* CAMERA */
 
 const camera = new THREE.PerspectiveCamera(
-    60,
-    window.innerWidth / window.innerHeight,
-    0.1,
-    1000,
+  60,
+  window.innerWidth / window.innerHeight,
+  0.1,
+  1000,
 );
 
 /* RENDERER */
 
 const renderer = new THREE.WebGLRenderer({
-    canvas,
-    antialias: true,
+  canvas,
+  antialias: true,
 });
 
 renderer.setSize(window.innerWidth, window.innerHeight);
@@ -46,34 +46,32 @@ let envRotation = 0;
 
 scene.environmentRotation = new THREE.Euler(0, 0, 0);
 
-exrLoader.load("/hdri/studio.exr", (texture) => {
+exrLoader.load(import.meta.env.BASE_URL + "hdri/studio.exr", (texture) => {
+  const pmrem = new THREE.PMREMGenerator(renderer);
+  pmrem.compileEquirectangularShader();
 
-    const pmrem = new THREE.PMREMGenerator(renderer)
-    pmrem.compileEquirectangularShader()
+  const envMap = pmrem.fromEquirectangular(texture).texture;
 
-    const envMap = pmrem.fromEquirectangular(texture).texture
+  scene.environment = envMap;
 
-    scene.environment = envMap
+  /* SKY SPHERE */
 
-    /* SKY SPHERE */
+  const geometry = new THREE.SphereGeometry(50, 64, 64);
 
-    const geometry = new THREE.SphereGeometry(50, 64, 64)
+  const material = new THREE.MeshBasicMaterial({
+    map: texture,
+    side: THREE.BackSide,
+  });
 
-    const material = new THREE.MeshBasicMaterial({
-        map: texture,
-        side: THREE.BackSide
-    })
+  const sky = new THREE.Mesh(geometry, material);
+  scene.add(sky);
 
-    const sky = new THREE.Mesh(geometry, material)
-    scene.add(sky)
+  texture.dispose();
+  pmrem.dispose();
 
-    texture.dispose()
-    pmrem.dispose()
-
-    sky.scale.set(1, 1, 1)
-        //sky.position.y = 15
-
-})
+  sky.scale.set(1, 1, 1);
+  //sky.position.y = 15
+});
 
 /* LIGHT */
 
@@ -108,11 +106,11 @@ scene.add(fillLight);
 /* FLOOR (soft contact shadow) */
 
 const floor = new THREE.Mesh(
-    new THREE.CircleGeometry(20, 64),
+  new THREE.CircleGeometry(20, 64),
 
-    new THREE.ShadowMaterial({
-        opacity: 0.35,
-    }),
+  new THREE.ShadowMaterial({
+    opacity: 0.35,
+  }),
 );
 
 floor.rotation.x = -Math.PI / 2;
@@ -125,15 +123,15 @@ scene.add(floor);
 /* CAMERA RIG */
 
 const cameraRig = {
-    radius: 8,
-    minRadius: 1,
-    maxRadius: 50,
+  radius: 8,
+  minRadius: 1,
+  maxRadius: 50,
 
-    theta: Math.PI / 4,
-    phi: Math.PI / 3,
+  theta: Math.PI / 4,
+  phi: Math.PI / 3,
 
-    targetTheta: Math.PI / 4,
-    targetPhi: Math.PI / 3,
+  targetTheta: Math.PI / 4,
+  targetPhi: Math.PI / 3,
 };
 
 /* MODEL LOADING */
@@ -141,64 +139,64 @@ const cameraRig = {
 const loader = new GLTFLoader();
 
 loader.load(
-    "/models/vehicle.glb",
+  import.meta.env.BASE_URL + "models/vehicle.glb",
 
-    (gltf) => {
-        const model = gltf.scene;
+  (gltf) => {
+    const model = gltf.scene;
 
-        model.traverse((child) => {
-            if (child.isMesh) {
-                child.castShadow = true;
-                child.receiveShadow = true;
-            }
-        });
+    model.traverse((child) => {
+      if (child.isMesh) {
+        child.castShadow = true;
+        child.receiveShadow = true;
+      }
+    });
 
-        scene.add(model);
+    scene.add(model);
 
-        /* AUTO CENTER */
+    /* AUTO CENTER */
 
-        const box = new THREE.Box3().setFromObject(model);
-        const center = box.getCenter(new THREE.Vector3());
-        const size = box.getSize(new THREE.Vector3());
+    const box = new THREE.Box3().setFromObject(model);
+    const center = box.getCenter(new THREE.Vector3());
+    const size = box.getSize(new THREE.Vector3());
 
-        model.position.sub(center);
+    model.position.sub(center);
 
-        /* CAMERA DISTANCE */
+    /* CAMERA DISTANCE */
 
-        const maxDim = Math.max(size.x, size.y, size.z);
+    const maxDim = Math.max(size.x, size.y, size.z);
 
-        cameraRig.minRadius = maxDim * 0.85;
-        cameraRig.radius = cameraRig.minRadius;
-        cameraRig.maxRadius = cameraRig.minRadius * 1.8;
+    cameraRig.minRadius = maxDim * 0.85;
+    cameraRig.radius = cameraRig.minRadius;
+    cameraRig.maxRadius = cameraRig.minRadius * 1.8;
 
-        loadingContainer.style.display = "none";
-    },
+    loadingContainer.style.display = "none";
+  },
 
-    (xhr) => {
-        const progress = xhr.loaded / xhr.total;
-        loadingBar.style.width = progress * 100 + "%";
-    },
+  (xhr) => {
+    const progress = xhr.loaded / xhr.total;
+    loadingBar.style.width = progress * 100 + "%";
+  },
 );
 
 /* CAMERA UPDATE */
 
 function updateCamera() {
-    cameraRig.theta += (cameraRig.targetTheta - cameraRig.theta) * 0.08;
-    cameraRig.phi += (cameraRig.targetPhi - cameraRig.phi) * 0.08;
+  cameraRig.theta += (cameraRig.targetTheta - cameraRig.theta) * 0.08;
+  cameraRig.phi += (cameraRig.targetPhi - cameraRig.phi) * 0.08;
 
-    cameraRig.phi = THREE.MathUtils.clamp(cameraRig.phi, 0.05, Math.PI / 2);
+  cameraRig.phi = THREE.MathUtils.clamp(cameraRig.phi, 0.05, Math.PI / 2);
 
-    const x =
-        cameraRig.radius * Math.sin(cameraRig.phi) * Math.sin(cameraRig.theta);
+  const x =
+    cameraRig.radius * Math.sin(cameraRig.phi) * Math.sin(cameraRig.theta);
 
-    const y = cameraRig.radius * Math.cos(cameraRig.phi);
+  const y = cameraRig.radius * Math.cos(cameraRig.phi);
 
-    const z =
-        cameraRig.radius * Math.sin(cameraRig.phi) * Math.cos(cameraRig.theta);
+  const z =
+    cameraRig.radius * Math.sin(cameraRig.phi) * Math.cos(cameraRig.theta);
 
-    camera.position.set(x, y, z);
+  camera.position.set(x, y, z);
 
-    camera.lookAt(0, 0, 0);
+  camera.lookAt(0, 0, 0);
 }
 
 /* AUTO ROTATE */
@@ -206,45 +204,45 @@ function updateCamera() {
 let idleTime = 0;
 
 function autoRotate() {
-    if (idleTime > 3) {
-        cameraRig.targetTheta += 0.002;
-    }
+  if (idleTime > 3) {
+    cameraRig.targetTheta += 0.002;
+  }
 }
 
 /* BUTTON VIEWS */
 
 document.querySelectorAll("button").forEach((btn) => {
-    btn.addEventListener("click", () => {
-        idleTime = 0;
+  btn.addEventListener("click", () => {
+    idleTime = 0;
 
-        const view = btn.dataset.view;
+    const view = btn.dataset.view;
 
-        switch (view) {
-            case "front":
-                cameraRig.targetTheta = 0;
-                cameraRig.targetPhi = Math.PI / 3;
-                break;
+    switch (view) {
+      case "front":
+        cameraRig.targetTheta = 0;
+        cameraRig.targetPhi = Math.PI / 3;
+        break;
 
-            case "back":
-                cameraRig.targetTheta = Math.PI;
-                cameraRig.targetPhi = Math.PI / 3;
-                break;
+      case "back":
+        cameraRig.targetTheta = Math.PI;
+        cameraRig.targetPhi = Math.PI / 3;
+        break;
 
-            case "left":
-                cameraRig.targetTheta = -Math.PI / 2;
-                cameraRig.targetPhi = Math.PI / 3;
-                break;
+      case "left":
+        cameraRig.targetTheta = -Math.PI / 2;
+        cameraRig.targetPhi = Math.PI / 3;
+        break;
 
-            case "right":
-                cameraRig.targetTheta = Math.PI / 2;
-                cameraRig.targetPhi = Math.PI / 3;
-                break;
+      case "right":
+        cameraRig.targetTheta = Math.PI / 2;
+        cameraRig.targetPhi = Math.PI / 3;
+        break;
 
-            case "top":
-                cameraRig.targetPhi = 0.12;
-                break;
-        }
-    });
+      case "top":
+        cameraRig.targetPhi = 0.12;
+        break;
+    }
+  });
 });
 
 /* MOUSE ROTATION */
@@ -253,51 +251,51 @@ let isDragging = false;
 let prev = { x: 0, y: 0 };
 
 canvas.addEventListener("mousedown", (e) => {
-    isDragging = true;
-    prev.x = e.clientX;
-    prev.y = e.clientY;
+  isDragging = true;
+  prev.x = e.clientX;
+  prev.y = e.clientY;
 });
 
 window.addEventListener("mouseup", () => {
-    isDragging = false;
+  isDragging = false;
 });
 
 window.addEventListener("mousemove", (e) => {
-    if (!isDragging) return;
+  if (!isDragging) return;
 
-    idleTime = 0;
+  idleTime = 0;
 
-    const dx = e.clientX - prev.x;
-    const dy = e.clientY - prev.y;
+  const dx = e.clientX - prev.x;
+  const dy = e.clientY - prev.y;
 
-    cameraRig.targetTheta -= dx * 0.005;
-    cameraRig.targetPhi -= dy * 0.005;
+  cameraRig.targetTheta -= dx * 0.005;
+  cameraRig.targetPhi -= dy * 0.005;
 
-    prev.x = e.clientX;
-    prev.y = e.clientY;
+  prev.x = e.clientX;
+  prev.y = e.clientY;
 });
 
 /* ZOOM */
 
 window.addEventListener("wheel", (e) => {
-    idleTime = 0;
+  idleTime = 0;
 
-    cameraRig.radius += e.deltaY * 0.01;
+  cameraRig.radius += e.deltaY * 0.01;
 
-    cameraRig.radius = THREE.MathUtils.clamp(
-        cameraRig.radius,
-        cameraRig.minRadius,
-        cameraRig.maxRadius
-    );
+  cameraRig.radius = THREE.MathUtils.clamp(
+    cameraRig.radius,
+    cameraRig.minRadius,
+    cameraRig.maxRadius,
+  );
 });
 
 /* RESIZE */
 
 window.addEventListener("resize", () => {
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
 
-    renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setSize(window.innerWidth, window.innerHeight);
 });
 
 /* LOOP */
@@ -305,30 +303,30 @@ window.addEventListener("resize", () => {
 const clock = new THREE.Clock();
 
 function animate() {
-    requestAnimationFrame(animate);
+  requestAnimationFrame(animate);
 
-    const delta = clock.getDelta();
+  const delta = clock.getDelta();
 
-    idleTime += delta;
+  idleTime += delta;
 
-    autoRotate();
+  autoRotate();
 
-    updateCamera();
+  updateCamera();
 
-    envRotation += delta * 0.1;
+  envRotation += delta * 0.1;
 
-    scene.environmentRotation.y = envRotation;
+  scene.environmentRotation.y = envRotation;
 
-    renderer.render(scene, camera);
+  renderer.render(scene, camera);
 }
-animate()
+animate();
 
 let resizeTimeout;
 
 window.addEventListener("resize", () => {
-    clearTimeout(resizeTimeout);
+  clearTimeout(resizeTimeout);
 
-    resizeTimeout = setTimeout(() => {
-        location.reload();
-    }, 500);
+  resizeTimeout = setTimeout(() => {
+    location.reload();
+  }, 500);
 });
